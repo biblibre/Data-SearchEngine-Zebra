@@ -1,17 +1,13 @@
 package Data::SearchEngine::Zebra::Results;
 
+use Modern::Perl;
 use Carp;
 use ZOOM;
-use XML::Simple;
-use Data::Dumper;
 use Moose;
 use Data::SearchEngine::Paginator;
 use Data::SearchEngine::Zebra::Item;
 
 extends 'Data::SearchEngine::Results';
-
-use strict;
-use warnings;
 
 has query => ( is => 'rw', isa => 'Data::SearchEngine::Query' );
 has entries_per_page => ( is => 'rw', isa => 'Int');
@@ -19,60 +15,56 @@ has _zoom_resultset =>( is => 'ro');
 
 sub BUILD {
     my $self = shift;
-    
+
 }
 
-sub retrieve{
-    my ($self, $zconn) = @_;
+sub retrieve {
+    my ( $self, $zconn ) = @_;
     my $offset = $self->query->{"page"};
     $offset = 0 unless ($offset);
-    
-	my $results = Data::SearchEngine::Results->new(
-		query       => $self->query
-	);
-    
-	while ((my $i = ZOOM::event([$zconn])) != 0) {
-	    my $event = $zconn->last_event();
-		if ( $event == ZOOM::Event::ZEND ) {
-            my @sorted_products; # fill with a search or something
-            my $scores; # fill with search scores
-    
+
+    my $results = Data::SearchEngine::Results->new( query => $self->query );
+
+            my @sorted_products;    # fill with a search or something
+            my $scores;             # fill with search scores
+
             my $start = time;
-            
+
             # Items start
-			my $first_record = defined( $offset ) ? $offset+1 : 1;
-			my $hits = $self->_zoom_resultset->size();
+            my $first_record = defined($offset) ? $offset + 1 : 1;
+            my $hits = $self->_zoom_resultset->size();
             $results->{pager} = Data::SearchEngine::Paginator->new(
-					               current_page => $offset,
-					               entries_per_page => $self->query->{"count"},
-					               total_entries => $hits
-		                        );
+                current_page     => $offset,
+                entries_per_page => $self->query->{"count"},
+                total_entries    => $hits
+            );
 
-			my $last_record = $hits;
-			if ( defined $self->query->{"count"} && $offset + $self->query->{"count"} < $hits ) {
-				$last_record  = $offset + $self->query->{"count"};
-			}
+            my $last_record = $hits;
+            if ( defined $self->query->{"count"}
+                && $offset + $self->query->{"count"} < $hits )
+            {
+                $last_record = $offset + $self->query->{"count"};
+            }
 
-			for my $j ( $first_record..$last_record ) {
-				my $record = $self->_zoom_resultset->record( $j-1 )->raw(); # 0 indexed
-	            my $item = Data::SearchEngine::Zebra::Item->new(
-	                record => $record
-	            );
-	            $results->add($item);
-			}
+            for my $j ( $first_record .. $last_record ) {
+                my $record =
+                  $self->_zoom_resultset->record( $j - 1 )->raw();   # 0 indexed
+                my $item =
+                  Data::SearchEngine::Zebra::Item->new( record => $record );
+                $results->add($item);
+            }
+
             # Items end
 
-            $results->elapsed(time - $start);
-		}
-	}
+            $results->elapsed( time - $start );
 
     return ($results);
 }
 
 sub hits {
-    my $self=shift;
+    my $self = shift;
     return $self->_zoom_resultset->size();
-};
+}
 
 1;
 

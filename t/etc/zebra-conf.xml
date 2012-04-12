@@ -1,0 +1,19 @@
+<yazgfs>
+<!-- [scheme:]host[:port][/databaseName] -->
+<!-- scheme: tcp, ssl, unix, http, sru -->
+<!-- can run all servers on tcp, but the unix socket is faster -->
+
+<!-- uncomment these lines and comment out the above if running on MSWin32 -->
+<listen id="biblioserver" >tcp:lx2.loc.gov:210/LCDB</listen>
+
+<server id="biblioserver"  listenref="biblioserver"> 
+<!--    <cql2rpn>./pqf.properties</cql2rpn>-->
+     <!-- <maximumrecordsize>2000000</maximumrecordsize> -->
+     <retrievalinfo>
+       <retrieval syntax="xml" name="marcxml"/>
+     </retrievalinfo>
+</server>
+<serverinfo id="biblioserver">
+        <ccl2rpn>./ccl.properties</ccl2rpn>
+</serverinfo>
+</yazgfs>

@@ -4,7 +4,6 @@ use Modern::Perl;
 use Carp;
 use ZOOM;
 use XML::Simple;
-use Data::Dumper;
 
 use Moose;
 
@@ -14,12 +13,14 @@ has record => ( is => 'rw', isa => 'Str');
 
 sub BUILD{
     my $self=shift;
+#    $self->raw($self->zoom_resultset->record($self->index_in_set)->raw());
     my $record = eval{XMLin($self->record)};
     if ($@){
         croak "an error occured in decoding the xml record ".$self->record." :".$@;
         return;
     }
-    $self->id($record->{idzebra}->{localnumber});
+    $self->id($record->{idzebra}->{localnumber}) if (defined $record->{idzebra});
+    $self->values($record);
 }
 
 1;
